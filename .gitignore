@@ -9,10 +9,13 @@ env_binding.h
 *.bin
 
 venv/
+.venv/
+.uv/
 .DS_Store
 **/__pycache__
 wandb/
 runs/
+logs/
 build/
 *.so
 *.pth

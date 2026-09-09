@@ -43,9 +43,29 @@ dev TAG="auto":
     esac
     docker run -it --rm --name drone $gpu --ipc host \
         --platform linux/amd64 \
+        -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
         -v "$(pwd):/work" -e WANDB_API_KEY \
         ghcr.io/tensaur/drone:$tag \
         bash -c 'just setup-puffer && exec bash' || true
+
+# run a command inside the docker container
+[group: "docker"]
+run +CMD:
+    #!/usr/bin/env bash
+    set -e
+    tag=$(just _resolve-tag auto)
+    case "$tag" in
+        cuda|cuda-jupyter) gpu="--gpus all" ;;
+        *) gpu="" ;;
+    esac
+    docker run --rm --name drone $gpu --ipc host \
+        --platform linux/amd64 \
+        -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
+        -v "$(pwd):/work" -e WANDB_API_KEY \
+        ghcr.io/tensaur/drone:$tag \
+        {{CMD}}
 
 # resolve an image tag: TAG="auto" picks cuda on x86 with nvidia-smi, cpu otherwise
 [private]
@@ -98,12 +118,15 @@ update-submodules:
 setup-puffer: setup-puffer-symlinks
     #!/usr/bin/env bash
     set -e
+    git config --global --add safe.directory '*' 2>/dev/null || true
+    export UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-$(pwd)/.uv/python}"
     fingerprint=$(just _puffer-fingerprint)
-    if [ -f .venv/.puffer-built ] && [ "$(cat .venv/.puffer-built 2>/dev/null)" = "$fingerprint" ]; then
+    if [ -f .venv/.puffer-built ] && [ "$(cat .venv/.puffer-built 2>/dev/null)" = "$fingerprint" ] && [ -x .venv/bin/python ] && .venv/bin/python -c "import pufferlib" >/dev/null 2>&1; then
         exit 0
     fi
 
-    # fingerprint mismatch
+    # fingerprint mismatch or broken venv
+    uv python install 3.13
     rm -rf .venv
     uv venv .venv
 
@@ -133,6 +156,7 @@ _setup-host:
 [private]
 _puffer-fingerprint:
     #!/usr/bin/env bash
+    git config --global --add safe.directory '*' 2>/dev/null || true
     {
         uname -sm
         git -C pufferlib rev-parse HEAD 2>/dev/null
