@@ -55,6 +55,7 @@ struct Client {
     bool use_3d_model;
     float* prop_angles;
     Vec3 prop_centers[NUM_PROPELLERS];
+    int prop_mesh_idx[NUM_PROPELLERS];
     float model_scale;
     int render_mode; // 0 = default (5.0x), 1 = normal (1.0x), 2 = minimal (sphere only)
 };
@@ -266,8 +267,11 @@ Client* make_client(DroneEnv* env) {
     client->render_mode = 0;
 
     // Load 3D model
-    const char* model_paths[] = {"resources/crazyflie.glb", "resources/drone/crazyflie.glb",
-                                 "crazyflie.glb", NULL};
+    const char* model_paths[] = {
+        "resources/tello.glb", "resources/drone/tello.glb", "tello.glb",
+        "resources/crazyflie.glb", "resources/drone/crazyflie.glb", "crazyflie.glb",
+        NULL
+    };
 
     for (int i = 0; model_paths[i] != NULL; i++) {
         if (FileExists(model_paths[i])) {
@@ -277,9 +281,21 @@ Client* make_client(DroneEnv* env) {
                 client->model_loaded = true;
                 TraceLog(LOG_INFO, "Loaded drone model: %s", model_paths[i]);
 
+                if (strstr(model_paths[i], "tello") != NULL || client->drone_model.meshCount == 5) {
+                    client->prop_mesh_idx[0] = 1;
+                    client->prop_mesh_idx[1] = 2;
+                    client->prop_mesh_idx[2] = 3;
+                    client->prop_mesh_idx[3] = 4;
+                } else {
+                    client->prop_mesh_idx[0] = 8;
+                    client->prop_mesh_idx[1] = 6;
+                    client->prop_mesh_idx[2] = 5;
+                    client->prop_mesh_idx[3] = 7;
+                }
+
                 // Cache propeller centers
                 for (int p = 0; p < NUM_PROPELLERS; p++) {
-                    int idx = PROP_MESH_IDX[p];
+                    int idx = client->prop_mesh_idx[p];
 
                     if (idx < client->drone_model.meshCount) {
                         client->prop_centers[p] =
@@ -352,7 +368,7 @@ void DrawDroneModel(Client* client, Drone* agent, int drone_idx, float dt, Color
         // Check if this mesh is a propeller
         bool is_prop = false;
         for (int p = 0; p < NUM_PROPELLERS; p++) {
-            if (m == PROP_MESH_IDX[p]) {
+            if (m == client->prop_mesh_idx[p]) {
                 is_prop = true;
                 Vec3 c = client->prop_centers[p];
                 Matrix toOrigin = MatrixTranslate(-c.x, -c.y, -c.z);
@@ -369,7 +385,7 @@ void DrawDroneModel(Client* client, Drone* agent, int drone_idx, float dt, Color
         Color origColor = mat.maps[MATERIAL_MAP_DIFFUSE].color;
         int brightness = (origColor.r + origColor.g + origColor.b) / 3;
 
-        if (is_prop || brightness > 64) {
+        if (is_prop || (client->drone_model.meshCount != 5 && brightness > 64)) {
             mat.maps[MATERIAL_MAP_DIFFUSE].color = body_color;
         } else {
             mat.maps[MATERIAL_MAP_DIFFUSE].color = origColor;
