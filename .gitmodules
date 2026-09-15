@@ -7,3 +7,6 @@
 	path = crazyflie-firmware
 	url = https://github.com/bitcraze/crazyflie-firmware
 	ignore = dirty
+[submodule "tello_repo"]
+	path = tello_repo
+	url = https://github.com/EloiStree/2022_10_04_upm_tello_stl.git
