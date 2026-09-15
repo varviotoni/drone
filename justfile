@@ -41,6 +41,7 @@ dev TAG="auto":
         cuda|cuda-jupyter) gpu="--gpus all" ;;
         *) gpu="" ;;
     esac
+    xhost +local:root >/dev/null 2>&1 || true
     docker run -it --rm --name drone $gpu --ipc host \
         --platform linux/amd64 \
         -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
@@ -59,6 +60,7 @@ run +CMD:
         cuda|cuda-jupyter) gpu="--gpus all" ;;
         *) gpu="" ;;
     esac
+    xhost +local:root >/dev/null 2>&1 || true
     docker run --rm --name drone $gpu --ipc host \
         --platform linux/amd64 \
         -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
