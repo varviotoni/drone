@@ -15,16 +15,30 @@
 #define TRAIL_LENGTH 50
 
 // DJI Tello Physical Constants
-#define BASE_MASS 0.080f        // kg (80g with battery)
-#define BASE_IXX 3.60e-5f       // kgm²
-#define BASE_IYY 3.60e-5f       // kgm²
-#define BASE_IZZ 7.10e-5f       // kgm²
-#define BASE_ARM_LEN 0.049f     // m (98mm diagonal wheelbase / 2)
-#define BASE_K_THRUST 4.31e-10f // thrust coefficient
-#define BASE_K_DRAG 0.0075f     // yaw moment constant
-#define BASE_GRAVITY 9.81f      // m/s^2
-#define BASE_MAX_RPM 28500.0f   // RPM (8520 coreless motor with 3" prop)
-#define BASE_K_MOT 0.12f        // s (RPM time constant)
+// (Crazyflie 2.X reference values commented alongside)
+// https://github.com/arplaboratory/learning-to-fly
+#define BASE_MASS 0.080f        // kg (Tello: 80g with battery | Crazyflie: 0.027f)
+#define BASE_IXX 3.60e-5f       // kgm² (Crazyflie: 3.85e-6f)
+#define BASE_IYY 3.60e-5f       // kgm² (Crazyflie: 3.85e-6f)
+#define BASE_IZZ 7.10e-5f       // kgm² (Crazyflie: 5.9675e-6f)
+#define BASE_ARM_LEN 0.049f     // m (Tello: 98mm diagonal / 2 | Crazyflie: 0.0396f)
+#define BASE_K_THRUST 4.31e-10f // thrust coefficient (Crazyflie: 3.16e-10f)
+#define BASE_K_DRAG 0.0075f     // yaw moment constant (Crazyflie: 0.005964552f)
+#define BASE_GRAVITY 9.81f      // m/s^2 (Crazyflie: 9.81f)
+#define BASE_MAX_RPM 28500.0f   // RPM (Tello: 8520 coreless motor | Crazyflie: 21702.0f)
+#define BASE_K_MOT 0.12f        // s (RPM time constant | Crazyflie: 0.15f)
+
+// Original Crazyflie 2.X Physical Constants for reference:
+// #define BASE_MASS 0.027f         // kg
+// #define BASE_IXX 3.85e-6f        // kgm²
+// #define BASE_IYY 3.85e-6f        // kgm²
+// #define BASE_IZZ 5.9675e-6f      // kgm²
+// #define BASE_ARM_LEN 0.0396f     // m
+// #define BASE_K_THRUST 3.16e-10f  // thrust coefficient
+// #define BASE_K_DRAG 0.005964552f // yaw moment constant
+// #define BASE_GRAVITY 9.81f       // m/s^2
+// #define BASE_MAX_RPM 21702.0f    // RPM
+// #define BASE_K_MOT 0.15f         // s (RPM time constant)
 
 #define BASE_K_ANG_DAMP 0.0f // angular damping coefficient
 #define BASE_B_DRAG 0.0f     // linear drag coefficient
