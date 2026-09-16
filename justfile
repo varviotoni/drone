@@ -42,11 +42,21 @@ dev TAG="auto":
         *) gpu="" ;;
     esac
     xhost +local:root >/dev/null 2>&1 || true
+    wandb_mounts=()
+    [ -f "$HOME/.netrc" ] && wandb_mounts+=(-v "$HOME/.netrc:/root/.netrc:ro")
+    [ -d "$HOME/.config/wandb" ] && wandb_mounts+=(-v "$HOME/.config/wandb:/root/.config/wandb:ro")
+    if [ -z "$WANDB_API_KEY" ]; then
+        if [ -f "$HOME/Desktop/tv641_wand_api_key" ]; then
+            export WANDB_API_KEY=$(head -n 1 "$HOME/Desktop/tv641_wand_api_key" | tr -d '\r\n')
+        elif [ -f "$HOME/Desktop/key" ]; then
+            export WANDB_API_KEY=$(head -n 1 "$HOME/Desktop/key" | tr -d '\r\n')
+        fi
+    fi
     docker run -it --rm --name drone $gpu --ipc host \
         --platform linux/amd64 \
         -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
         -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
-        -v "$(pwd):/work" -e WANDB_API_KEY \
+        -v "$(pwd):/work" -e WANDB_API_KEY "${wandb_mounts[@]}" \
         ghcr.io/tensaur/drone:$tag \
         bash -c 'just setup-puffer && exec bash' || true
 
@@ -61,11 +71,21 @@ run +CMD:
         *) gpu="" ;;
     esac
     xhost +local:root >/dev/null 2>&1 || true
+    wandb_mounts=()
+    [ -f "$HOME/.netrc" ] && wandb_mounts+=(-v "$HOME/.netrc:/root/.netrc:ro")
+    [ -d "$HOME/.config/wandb" ] && wandb_mounts+=(-v "$HOME/.config/wandb:/root/.config/wandb:ro")
+    if [ -z "$WANDB_API_KEY" ]; then
+        if [ -f "$HOME/Desktop/tv641_wand_api_key" ]; then
+            export WANDB_API_KEY=$(head -n 1 "$HOME/Desktop/tv641_wand_api_key" | tr -d '\r\n')
+        elif [ -f "$HOME/Desktop/key" ]; then
+            export WANDB_API_KEY=$(head -n 1 "$HOME/Desktop/key" | tr -d '\r\n')
+        fi
+    fi
     docker run --rm --name drone $gpu --ipc host \
         --platform linux/amd64 \
         -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
         -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
-        -v "$(pwd):/work" -e WANDB_API_KEY \
+        -v "$(pwd):/work" -e WANDB_API_KEY "${wandb_mounts[@]}" \
         ghcr.io/tensaur/drone:$tag \
         {{CMD}}
 
@@ -196,6 +216,9 @@ build-web MODEL="latest": setup-puffer-symlinks
 eval MODEL="" TASK="":
     #!/usr/bin/env bash
     set -e
+    if [ ! -f /.dockerenv ] && [ ! -d /work ]; then
+        exec just run "just eval '{{MODEL}}' '{{TASK}}'"
+    fi
     args=()
     [ -n "{{MODEL}}" ] && args+=(--load-model-path "{{MODEL}}")
     [ -n "{{TASK}}" ] && args+=(--env.task "$(just _task-id {{TASK}})")
@@ -207,6 +230,9 @@ eval MODEL="" TASK="":
 train TASK="hover" TRACK="":
     #!/usr/bin/env bash
     set -e
+    if [ ! -f /.dockerenv ] && [ ! -d /work ]; then
+        exec just run "just train '{{TASK}}' '{{TRACK}}'"
+    fi
     args=(--env.task "$(just _task-id {{TASK}})")
     [ -n "{{TRACK}}" ] && args+=(--wandb --wandb-project "{{TRACK}}")
     command -v nvcc >/dev/null || args+=(--slowly)
@@ -217,7 +243,10 @@ train TASK="hover" TRACK="":
 sweep TASK="hover" TRACK="":
     #!/usr/bin/env bash
     set -e
-    args=(--max-runs 10000 --env.task "$(just _task-id {{TASK}})")
+    if [ ! -f /.dockerenv ] && [ ! -d /work ]; then
+        exec just run "just sweep '{{TASK}}' '{{TRACK}}'"
+    fi
+    args=(--sweep.max-runs 10000 --env.task "$(just _task-id {{TASK}})")
     [ -n "{{TRACK}}" ] && args+=(--wandb --wandb-project "{{TRACK}}")
     command -v nvcc >/dev/null || args+=(--slowly)
     ./.venv/bin/puffer sweep drone "${args[@]}"
