@@ -8,6 +8,7 @@ typedef struct {
     float collision_penalty;
     float time_penalty;
     float alpha_dist;
+    float alpha_yaw;
 } RaceConfig;
 
 typedef struct {
@@ -84,6 +85,7 @@ static float race_reward(DroneEnv* env, Drone* agent, int idx, StepCache* cache)
     }
 
     reward -= cfg->time_penalty;
+    reward -= cfg->alpha_yaw * fabsf(agent->state.omega.z);
     return reward;
 }
 

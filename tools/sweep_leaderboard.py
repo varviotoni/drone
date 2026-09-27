@@ -90,6 +90,8 @@ def main():
     print(f"alpha_dist = {best['env'].get('alpha_dist', 1.0):.6f}")
     print(f"ring_reward = {best['env'].get('ring_reward', 1.0):.6f}")
     print(f"collision_penalty = {best['env'].get('collision_penalty', 0.5):.6f}")
+    if 'alpha_yaw' in best['env']:
+        print(f"alpha_yaw = {best['env'].get('alpha_yaw', 0.0):.6f}")
 
     print("\n[policy]")
     for k, v in sorted(best['policy'].items()):

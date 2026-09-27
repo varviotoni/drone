@@ -43,6 +43,8 @@ static void race_init(DroneEnv* env, Dict* kwargs) {
     cfg->collision_penalty = dict_get(kwargs, "collision_penalty")->value;
     cfg->time_penalty = dict_get(kwargs, "time_penalty")->value;
     cfg->alpha_dist = dict_get(kwargs, "alpha_dist")->value;
+    DictItem* alpha_yaw_item = dict_get_unsafe(kwargs, "alpha_yaw");
+    cfg->alpha_yaw = alpha_yaw_item ? (float)alpha_yaw_item->value : 0.0f;
     env->task_config = cfg;
     env->ring_buffer = (Target*)calloc(cfg->max_rings, sizeof(Target));
 
